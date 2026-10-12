@@ -39,4 +39,4 @@ jobs:
       - name: Publish own prerelease
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "synthpulse-pi-${GITHUB_RUN_NUMBER}" pi-release/* --target "$GITHUB_SHA" --prerelease --title "SynthPulse WebUI - standalone Raspberry Pi" --notes "ARM64 image built from our WebUI and engine forks. No production credentials or state. Account onboarding and physical Pi test pending."
+        run: gh release create --repo "$GITHUB_REPOSITORY" "synthpulse-pi-${GITHUB_RUN_NUMBER}" pi-release/* --target "$GITHUB_SHA" --prerelease --title "SynthPulse WebUI - standalone Raspberry Pi" --notes "ARM64 image built from our WebUI and engine forks. No production credentials or state. Account onboarding and physical Pi test pending."
