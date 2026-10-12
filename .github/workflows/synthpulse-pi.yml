@@ -1,0 +1,42 @@
+name: SynthPulse Pi WebUI
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+concurrency:
+  group: synthpulse-pi
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Synthwave-Solutions/hermes-webui
+          ref: 251d2ac641a3b248b7e15aa33cd4e8546c890ffd
+
+      - name: Build own WebUI and engine
+        run: docker build -f packaging/pi/Dockerfile -t synthpulse-webui-pi:${GITHUB_SHA} .
+      - name: Validate and archive
+        run: |
+          test "$(docker image inspect synthpulse-webui-pi:${GITHUB_SHA} --format '{{.Architecture}}')" = arm64
+          mkdir -p pi-release
+          docker save synthpulse-webui-pi:${GITHUB_SHA} | gzip > pi-release/synthpulse-webui-arm64.tar.gz
+          python3 - <<'BUILD'
+          import json,os,pathlib,hashlib
+          p=pathlib.Path('pi-release');f=p/'synthpulse-webui-arm64.tar.gz';h=hashlib.file_digest(f.open('rb'),'sha256').hexdigest()
+          data={'repository':os.environ['GITHUB_REPOSITORY'],'commit':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'architecture':'arm64','hardware_tested':False,'source_repository':'Synthwave-Solutions/hermes-webui','source_commit':'251d2ac641a3b248b7e15aa33cd4e8546c890ffd','image':'synthpulse-webui-pi:'+os.environ['GITHUB_SHA'],'sha256':{f.name:h}}
+          (p/'provenance.json').write_text(json.dumps(data,indent=2)+'\n')
+          (p/'SHA256SUMS').write_text(h+'  '+f.name+'\n')
+          BUILD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: synthpulse-webui-pi
+          path: pi-release/
+      - name: Publish own prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "synthpulse-pi-${GITHUB_RUN_NUMBER}" pi-release/* --target "$GITHUB_SHA" --prerelease --title "SynthPulse WebUI - standalone Raspberry Pi" --notes "ARM64 image built from our WebUI and engine forks. No production credentials or state. Account onboarding and physical Pi test pending."
