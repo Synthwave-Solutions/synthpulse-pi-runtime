@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Synthwave-Solutions/hermes-webui
-          ref: ed97c0e9e1090e72c308fad359061f2fabc1f334
+          ref: a9ed7494d76c01e4fcda244e8eb377a7e5550e2e
 
       - name: Build own WebUI and engine
         run: docker build -f packaging/pi/Dockerfile -t synthpulse-webui-pi:${GITHUB_SHA} .
@@ -28,7 +28,7 @@ jobs:
           python3 - <<'BUILD'
           import json,os,pathlib,hashlib
           p=pathlib.Path('pi-release');f=p/'synthpulse-webui-arm64.tar.gz';h=hashlib.file_digest(f.open('rb'),'sha256').hexdigest()
-          data={'repository':os.environ['GITHUB_REPOSITORY'],'commit':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'architecture':'arm64','hardware_tested':False,'source_repository':'Synthwave-Solutions/hermes-webui','source_commit':'ed97c0e9e1090e72c308fad359061f2fabc1f334','image':'synthpulse-webui-pi:'+os.environ['GITHUB_SHA'],'sha256':{f.name:h}}
+          data={'repository':os.environ['GITHUB_REPOSITORY'],'commit':os.environ['GITHUB_SHA'],'run':os.environ['GITHUB_RUN_ID'],'architecture':'arm64','hardware_tested':False,'source_repository':'Synthwave-Solutions/hermes-webui','source_commit':'a9ed7494d76c01e4fcda244e8eb377a7e5550e2e','image':'synthpulse-webui-pi:'+os.environ['GITHUB_SHA'],'sha256':{f.name:h}}
           (p/'provenance.json').write_text(json.dumps(data,indent=2)+'\n')
           (p/'SHA256SUMS').write_text(h+'  '+f.name+'\n')
           BUILD
