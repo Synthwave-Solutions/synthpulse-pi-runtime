@@ -24,7 +24,7 @@ jobs:
         run: |
           test "$(docker image inspect synthpulse-webui-pi:${GITHUB_SHA} --format '{{.Architecture}}')" = arm64
           docker run --rm --entrypoint sh synthpulse-webui-pi:${GITHUB_SHA} -c 'git --version && gh --version && chromium --version && command -v Xtigervnc'
-          docker run --rm --network none --entrypoint /opt/synthpulse/hermes-agent/venv/bin/python synthpulse-webui-pi:${GITHUB_SHA} -c 'import mcp,httpx2;from tools.browser_tool_install import check_browser_requirements;from tools.computer_use.cua_backend_driver import cua_driver_runtime_contract_status;assert check_browser_requirements();s=cua_driver_runtime_contract_status();print(s);assert s["ready"]'
+          docker run --rm --network none --entrypoint /opt/synthpulse/hermes-agent/venv/bin/python synthpulse-webui-pi:${GITHUB_SHA} -c 'import mcp,httpx2;from tools.browser_tool_install import _find_agent_browser,_chromium_installed;from tools.computer_use.cua_backend_driver import cua_driver_runtime_contract_status;assert _find_agent_browser();assert _chromium_installed();s=cua_driver_runtime_contract_status();print(s);assert s["ready"]'
           mkdir -p pi-release
           docker save synthpulse-webui-pi:${GITHUB_SHA} | gzip > pi-release/synthpulse-webui-arm64.tar.gz
           python3 - <<'BUILD'
