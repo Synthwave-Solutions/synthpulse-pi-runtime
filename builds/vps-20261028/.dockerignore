@@ -1,0 +1,8 @@
+*
+!Dockerfile*
+!engine.tar
+!webui.tar
+!webui-entrypoint.sh
+!botscreen
+!botscreen.py
+!cua-driver.tar.gz
