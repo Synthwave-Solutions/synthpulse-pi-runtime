@@ -1,0 +1,19 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends tigervnc-standalone-server xfce4-panel xfwm4 xfdesktop4 xfce4-settings xfce4-terminal dbus-x11 x11-xserver-utils x11-utils x11-xkb-utils xauth fonts-dejavu-core chromium xdotool scrot poppler-utils libatk-bridge2.0-0 libatspi2.0-0 libxdo3 && rm -rf /var/lib/apt/lists/*
+COPY cua-driver.tar.gz /tmp/cua-driver.tar.gz
+RUN echo '6b3a308c6741dd8291aad22a308bd2ec8eb52eab64687be007ac86ceaf7e3307  /tmp/cua-driver.tar.gz' | sha256sum -c - && mkdir -p /opt/synthpulse-cua && tar xzf /tmp/cua-driver.tar.gz -C /opt/synthpulse-cua && rm /tmp/cua-driver.tar.gz
+COPY botscreen.py /opt/synthpulse-botscreen/botscreen.py
+COPY botscreen /usr/local/bin/botscreen
+RUN chmod 755 /usr/local/bin/botscreen
+ENV HERMES_CUA_DRIVER_CMD=/opt/synthpulse-cua/cua-driver
+USER synthpulse
+RUN /opt/synthpulse-cua/cua-driver telemetry disable && /opt/synthpulse-cua/cua-driver manifest >/tmp/cua-manifest.json
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends at-spi2-core ffmpeg gh && rm -rf /var/lib/apt/lists/*
+USER synthpulse
+
+USER root
+RUN /opt/synthpulse/hermes-agent/venv/bin/pip install --no-cache-dir python-docx openpyxl python-pptx pypdf
+USER synthpulse

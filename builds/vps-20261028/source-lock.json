@@ -1,0 +1,12 @@
+{
+  "basis": "running VPS code, clean data",
+  "engine": {
+    "repo": "Synthwave-Solutions/hermes-agent",
+    "commit": "b59086821cb005d2d8c9890d1bff00b0b7fd2291"
+  },
+  "webui": {
+    "repo": "Synthwave-Solutions/hermes-webui",
+    "commit": "bebfbc237065afdbe61695afd9b3f3d77dbd4457"
+  },
+  "hardware_tested": false
+}
