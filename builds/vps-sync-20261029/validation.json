@@ -31,7 +31,19 @@
       900
     ],
     "webui_synthwave_auto_chat": "UPDATE_OK",
-    "claude_remote_still_active": true
+    "claude_remote_still_active": true,
+    "rendered_browser": {
+      "login": true,
+      "latest_bots_sidebar": true,
+      "specialist_dock_mounted": true,
+      "hidden_customer_navigation": true,
+      "rightbar_canvas": [
+        1440,
+        900
+      ],
+      "javascript_errors": 0,
+      "active_specialist_task_not_created": true
+    }
   },
   "backup": "/root/recovery-20261029/vps-sync-20261029T014053Z",
   "pending_external_onboarding": [
