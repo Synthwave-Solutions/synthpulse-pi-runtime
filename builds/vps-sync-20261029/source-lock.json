@@ -1,0 +1,15 @@
+{
+  "base_image": "sha256:672a2c73ac30e2522c5ff1b3889bfce0d17e89387d499d8324a48e858de86fb5",
+  "engine_commit": "b59086821cb005d2d8c9890d1bff00b0b7fd2291",
+  "vps_webui_commit": "b79a786ca99da3b49e56a2d6a511a710d8eead46",
+  "webui_commit": "204cfb0f1f2a22f50f510b989a99c62f7379e604",
+  "webui_repository": "Synthwave-Solutions/hermes-webui",
+  "webui_branch": "addcontract/pi-vps-sync-20261029",
+  "architecture": "arm64",
+  "engine_comparison": {
+    "tracked_files": 17481,
+    "changed": 0,
+    "missing": 0
+  },
+  "customer_state_copied_from_vps": false
+}
