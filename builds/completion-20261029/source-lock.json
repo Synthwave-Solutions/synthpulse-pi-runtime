@@ -1,0 +1,31 @@
+{
+  "architecture": "arm64",
+  "release": "synthpulse-pi-vps-20261028",
+  "base": {
+    "runtime_source_commit": "0595f8c7bb5b3ab175e2d6c7f9a19d3728d9e8a1",
+    "image": "synthpulse-webui:pi-clean-desktop-20261028",
+    "image_id": "sha256:a1e4a92099c9be7b056b2032721f4284e943c189ef76d74cf464a4502c304220",
+    "archive_url": "https://github.com/Synthwave-Solutions/synthpulse-pi-runtime/releases/download/synthpulse-pi-vps-20261028/synthpulse-webui-arm64.tar.gz",
+    "archive_sha256": "f60715b3cdc57be59e5ab01eb0ade178a54b53b81c87dc0ef3eee66927bf23ab",
+    "engine_commit": "b59086821cb005d2d8c9890d1bff00b0b7fd2291",
+    "webui_commit": "bebfbc237065afdbe61695afd9b3f3d77dbd4457"
+  },
+  "completion": {
+    "revision": "pi-runtime-completion-20261029-r1",
+    "archive_url": "https://github.com/Synthwave-Solutions/synthpulse-pi-runtime/releases/download/synthpulse-pi-vps-20261028/pi-runtime-completion-20261029.tar.gz",
+    "archive_sha256": "3b020d2e4be1ac23e0f5575a9ba5e40fe453fdc5721e1dc85e64f8d4b0f85ff5",
+    "archive_bytes": 129408166,
+    "webui_commit": "f2b925d2bc500b2a2ffc024a02bbe93e074d6d9d",
+    "webui_repo": "Synthwave-Solutions/hermes-webui",
+    "observed_image_id": "sha256:3d67ca9ec2faac9d7defdf528e6fe515af915875c63d4288ede54d80742a0f08"
+  },
+  "stt": {
+    "faster_whisper": "1.2.1",
+    "ctranslate2": "4.8.4",
+    "av": "16.1.0",
+    "model": {
+      "repo_id": "Systran/faster-whisper-tiny",
+      "revision": "d90ca5fe260221311c53c58e660288d3deb8d356"
+    }
+  }
+}

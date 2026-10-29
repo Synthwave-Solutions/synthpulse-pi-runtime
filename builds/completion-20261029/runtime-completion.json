@@ -1,0 +1,18 @@
+{
+  "revision": "pi-runtime-completion-20261029-r1",
+  "webui_base_commit": "bebfbc237065afdbe61695afd9b3f3d77dbd4457",
+  "engine_base_commit": "b59086821cb005d2d8c9890d1bff00b0b7fd2291",
+  "webui_files": {
+    "api/memdash_backend.py": "b7b55eaff6cdafa1bd196422271015d0c3deb31b8e92c507b8a49ea5075e48bd",
+    "api/routes.py": "91b232aaaaa2d60d4cafb8ec24249d328d328d8dd1c35384dc4f832e012aa870",
+    "api/apps_launcher.py": "d240da609c32cb616cb17b15d39fa089fe3bc82e61f17f1d423f6f840e701ccd",
+    "api/msp_service.py": "04feaaaaf7fa61ae3f3ff7f18bbda2a7cc0b60eb8d8019b5408f7216e98df38d",
+    "static/apps.js": "8417d2becc985b766d7acc359973d978015a6852d2029a5bd910920554bd0b66"
+  },
+  "features": [
+    "local-whisper-tiny",
+    "local-personal-memory-explorer",
+    "customer-login-subtitle",
+    "msp-request-only-apps"
+  ]
+}

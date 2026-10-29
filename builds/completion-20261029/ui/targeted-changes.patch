@@ -1,0 +1,110 @@
+--- a/api/memdash_backend.py
++++ b/api/memdash_backend.py
+@@ -323,10 +323,41 @@
+         return data
+ 
+ 
++class LocalPersonalBackend(InterimSqliteBackend):
++    """Read-only explorer restricted to this authenticated person's local banks."""
++    name = "local_personal"
++    _shared = None
++    _shared_lock = threading.Lock()
++
++    def data_version(self, store: registry.Store) -> str:
++        # The shared reader remains read-only. Use sub-second DB/WAL revisions
++        # so a consolidation immediately invalidates the 30-second view cache.
++        revisions = []
++        for suffix in ("", "-wal"):
++            try:
++                stat = os.stat(store.backend_ref + suffix)
++                revisions.append((stat.st_mtime_ns, stat.st_size, stat.st_ino))
++            except OSError:
++                revisions.append(None)
++        return repr(revisions)
++
++    def list_stores(self, viewer: Viewer, identity: dict | None = None) -> list[registry.Store]:
++        if not viewer.email or not viewer.email_hash:
++            raise BackendRefused("Authenticated person required")
++        try:
++            return [store for store in registry.personal_stores(viewer) if store.is_own(viewer)]
++        except registry.RegistryUnavailable as exc:
++            raise BackendUnavailable(str(exc)) from exc
++
++
+ def select_backend(*, is_hq: bool):
+     """The configured backend, or ``BackendUnavailable`` (addendum 6.6.7)."""
+     mode = os.environ.get("HERMES_WEBUI_MEMDASH_BACKEND", "").strip()
+     hub_url = os.environ.get("HERMES_WEBUI_MNEMO_URL", "").strip()
++    if mode == "local_personal":
++        if hub_url:
++            raise BackendUnavailable("Choose either the local personal explorer or the hub")
++        return LocalPersonalBackend.shared()
+     if mode == "sqlite_interim":
+         if hub_url:
+             raise BackendUnavailable("the interim reader is off while a hub URL is set")
+--- a/api/routes.py
++++ b/api/routes.py
+@@ -12280,7 +12280,7 @@
+             .replace("{{WEBUI_VERSION}}", version_token)
+             .replace("{{LANG}}", _html.escape(_login_strings["lang"]))
+             .replace("{{LOGIN_TITLE}}", _html.escape(_login_strings["title"]))
+-            .replace("{{LOGIN_SUBTITLE}}", _html.escape(_login_strings["subtitle"]))
++            .replace("{{LOGIN_SUBTITLE}}", _html.escape(os.getenv("SP_WEBUI_LOGIN_SUBTITLE", "").strip() or _login_strings["subtitle"]))
+             .replace("{{LOGIN_INVALID_PW}}", _html.escape(_login_strings["invalid_pw"]))
+             .replace(
+                 "{{LOGIN_CONN_FAILED}}", _html.escape(_login_strings["conn_failed"])
+--- a/api/apps_launcher.py
++++ b/api/apps_launcher.py
+@@ -114,6 +114,6 @@
+                 row['url'] = None
+     result = {'apps': apps}
+     if managed:
+-        result['msp'] = {'connected': True, 'manage_apps': customer.get('permissions', {}).get('manage_apps', False)}
++        result['msp'] = {'connected': True, 'manage_apps': customer.get('permissions', {}).get('manage_apps', False), 'request_only': os.getenv('SP_MSP_REQUEST_ONLY_APPS') == '1'}
+     j(handler, result)
+     return True
+--- a/api/msp_service.py
++++ b/api/msp_service.py
+@@ -1,6 +1,7 @@
+ """Self-service proxy. Only server-resolved identities reach the signed MSP API."""
+ from urllib.parse import parse_qs, quote, urlencode
+ import re
++import os
+ from api import control_plane_client as control
+ from api.org_modules import context
+ from api.governance import delegation
+@@ -60,6 +61,8 @@
+     # Validate even self-service payloads before forwarding. Organisation and
+     # acting headers can never be supplied by the browser.
+     if not isinstance(body,dict):return respond(handler,(422,{'error':'Invalid request'}))
++    if path=='/api/msp/app-state' and os.getenv('SP_MSP_REQUEST_ONLY_APPS') == '1':
++        return respond(handler,(403,{'error':'msp_approval_required','message':'Ask your MSP to provision or change app availability.'}))
+     if path=='/api/msp/invoice':
+         allowed={'request_id'};ident=body.get('request_id','')
+         if not isinstance(ident,str) or not re.fullmatch(r'br_[A-Za-z0-9_-]{1,80}',ident):return respond(handler,(422,{'error':'Invalid invoice request'}))
+--- a/static/apps.js
++++ b/static/apps.js
+@@ -34,16 +34,21 @@
+         card.append(heading,el('p',localized(r.description)||c.intro,'app-description'));
+         const actions=el('div',null,'app-actions'),url=validUrl(r.url);
+         if(url){const action=c.open;const link=el('a',action+' ↗','app-button app-open');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.setAttribute('aria-label',action+': '+name);actions.append(link);}
+-        else card.append(el('p',r.available&&r.enabled===false?(lang()==='nl'?'Uitgeschakeld in SynthPulse':'Disabled in SynthPulse'):c.unconfigured,'app-unconfigured'));
++        else card.append(el('p',r.enabled===false?(lang()==='nl'?'Uitgeschakeld in SynthPulse':'Disabled in SynthPulse'):c.unconfigured,'app-unconfigured'));
+         if(r.id){const help=btn(c.help,()=>guide(id,help));help.setAttribute('aria-label',c.help+': '+name);actions.append(help);}
+         card.append(actions);
+         if(msp.connected && r.support_levels){
+           const nl=lang()==='nl';
+           const change=(path,payload)=>mutate(path,{app_id:id,...payload});
+-          if(msp.manage_apps && r.available){
++          if(msp.manage_apps && r.available && !msp.request_only){
+             const toggle=btn((r.enabled?(nl?'Aan':'On'):(nl?'Uit':'Off'))+' · SynthPulse',()=>change('/api/msp/app-state',{enabled:!r.enabled}));
+             toggle.classList.add('app-state-toggle');toggle.setAttribute('role','switch');toggle.setAttribute('aria-checked',String(r.enabled));toggle.setAttribute('aria-label',(nl?'App beschikbaar: ':'App available: ')+name);toggle.disabled=mutation;card.append(toggle);
+ 
++          }
++          if(msp.request_only && (!r.available || !r.enabled)){
++            const request=btn(nl?'Aanvragen bij MSP':'Request from MSP',()=>mutate('/api/msp/app-request',{
++              app_id:id,note:(nl?'Graag deze app beoordelen en beschikbaar maken voor onze installatie: ':'Please review and provision this app for our installation: ')+name}));
++            request.disabled=mutation;actions.append(request);
+           }
+           const support=el('div',null,'app-support'),sub=r.support;
+           support.append(el('strong',nl?'Support & uitbreidingen':'Support & upgrades'));
